@@ -10,8 +10,9 @@ player = input("Enter your agent name: ")
 fuel = 20
 time_left = 20
 criminals_caught = 0
-
 rounds = 5
+
+last_action = None
 
 connection = mysql.connector.connect(
     host="localhost",
@@ -82,15 +83,30 @@ for r in range(rounds):
 
     random.shuffle(options)
 
-    print("\nChoose ONE investigation:")
-    print("1 Passenger Records (cost 2 time)")
-    print("2 Flight Path Analysis (cost 2 fuel)")
-    print("3 Airport CCTV (cost 3 time)")
-    print("4 Informant Tip (cost 1 fuel + 1 time)")
+    actions = {
+        "1": "Passenger Records (cost 2 time)",
+        "2": "Flight Path Analysis (cost 2 fuel + 6 time)",
+        "3": "Airport CCTV (cost 2 fuel + 2 time)",
+        "4": "Informant Tip (cost 6 fuel + 4 time)"
+    }
+
+    print("\nChoose ONE investigation:\n")
+
+    for key in actions:
+        if key != last_action:
+            print(key, actions[key])
 
     action = input("Action: ")
 
+    if action == last_action or action not in actions:
+        print("Invalid investigation.")
+        continue
+
     if action == "1":
+
+        if time_left < 2:
+            print("Not enough time.")
+            continue
 
         time_left -= 2
 
@@ -108,32 +124,43 @@ for r in range(rounds):
 
     elif action == "2":
 
+        if fuel < 2 or time_left < 6:
+            print("Not enough resources.")
+            continue
+
         fuel -= 2
+        time_left -= 6
+
         print("\nFlight analysis shows a long international route.")
 
     elif action == "3":
 
-        time_left -= 3
+        if fuel < 2 or time_left < 2:
+            print("Not enough resources.")
+            continue
 
-        city = criminal_airport[1]
-        city = city.split("(")[0].split("-")[0].strip()
+        fuel -= 2
+        time_left -= 2
 
-        print("\nCCTV spotted a suspicious traveler heading toward:", city)
+        city = criminal_airport[1].split("(")[0].split("-")[0].strip()
+
+        print("\nCCTV spotted the suspect heading toward:", city)
 
     elif action == "4":
 
-        fuel -= 1
-        time_left -= 1
+        if fuel < 6 or time_left < 4:
+            print("Not enough resources.")
+            continue
+
+        fuel -= 6
+        time_left -= 4
 
         country = criminal_airport[2]
         letter = country[0]
 
         print("\nInformant tip: destination country starts with:", letter)
 
-    else:
-        print("Invalid action.")
-        continue
-
+    last_action = action
 
     print("\nPossible destinations:\n")
 
